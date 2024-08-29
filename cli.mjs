@@ -1,0 +1,60 @@
+import { Command } from "commander";
+import chalk from "chalk";
+import * as fs from "fs";
+const program = new Command();
+// const {chalk} = require("chalk");
+// const path = require("path");
+let log = console.log;
+program
+  .name("Todo application")
+  .description(
+    "Simple command line application that helps you add , delete todos and mark them as done/not done. Todos are stored in todos.json"
+  )
+  .version("0.0.1");
+program
+  .command("addTodo")
+  .description("Adds a todo into todos.json")
+  .argument("<todo name>", "Todo that has to be added.")
+  .action((todo) => {
+    console.log("j");
+    fs.readFile("todos.json", "utf-8", (err, data) => {
+      if (err || data == "") {
+        let arr = [];
+        let jsonObject = {};
+        log(jsonObject + "before json object filling");
+        jsonObject["id"] = 1;
+        jsonObject["todo"] = todo;
+        jsonObject["status"] = 0; //0 status for not completed , 1 for completed.
+        arr.push(jsonObject);
+        log(chalk.red("File doesnt exist. So creating..."));
+        log(jsonObject);
+        log(arr);
+        // log(arr.toString());
+        log(JSON.stringify(arr));
+        fs.appendFile("todos.json", JSON.stringify(arr), () => {
+          log(chalk.green("Todo successfully added."));
+        });
+      } else {
+        console.log(data);
+        let dataObject = JSON.parse(data);
+        let jsonObject = {};
+        jsonObject["id"] = dataObject[dataObject.length - 1]["id"] + 1;
+        jsonObject["todo"] = todo;
+        jsonObject["status"] = 0; //0 status for not completed , 1 for completed.
+        log(jsonObject);
+        console.log(dataObject.length);
+        dataObject[dataObject.length] = jsonObject;
+        // log(arr);
+        fs.writeFile("todos.json", JSON.stringify(dataObject), () => {
+          log(chalk.green("Todo successfully added."));
+        });
+      }
+    });
+  });
+program
+  .command("editTodo")
+  .description("Edits a todo")
+  .argument("<todo to be edited>,argument 1 is the todo that has to be edited.")
+  .argument("<new todo>", "New Todo")
+  .action();
+program.parse();
