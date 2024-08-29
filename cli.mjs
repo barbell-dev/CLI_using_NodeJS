@@ -18,7 +18,9 @@ program
   .action((todo) => {
     console.log("j");
     fs.readFile("todos.json", "utf-8", (err, data) => {
-      if (err || data == "") {
+      log(err);
+      log(data);
+      if (err || data == "" || data == "[]") {
         let arr = [];
         let jsonObject = {};
         log(jsonObject + "before json object filling");
@@ -31,7 +33,7 @@ program
         log(arr);
         // log(arr.toString());
         log(JSON.stringify(arr));
-        fs.appendFile("todos.json", JSON.stringify(arr), () => {
+        fs.writeFile("todos.json", JSON.stringify(arr), () => {
           log(chalk.green("Todo successfully added."));
         });
       } else {
@@ -56,5 +58,58 @@ program
   .description("Edits a todo")
   .argument("<todo to be edited>,argument 1 is the todo that has to be edited.")
   .argument("<new todo>", "New Todo")
-  .action();
+  .action((oldTodo, newTodo) => {
+    fs.readFile("todos.json", "utf-8", (err, data) => {
+      if (err) {
+        log(chalk.red("File doesnt exist."));
+      } else {
+        let dataObject = JSON.parse(data);
+        let found = 0;
+        for (let i = 0; i < dataObject.length; i++) {
+          if (dataObject[i]["todo"] == oldTodo) {
+            dataObject[i]["todo"] = newTodo;
+            found = 1;
+            break;
+          }
+        }
+        if (found != 1) {
+          log(chalk.red(oldTodo + " not found in todos.json ."));
+        } else {
+          fs.writeFile("todos.json", JSON.stringify(dataObject), () => {
+            log(chalk.green("Todo successfully updated."));
+          });
+        }
+      }
+    });
+  });
+program
+  .command("deleteTodo")
+  .description("Deletes a todo from the todos.json file.")
+  .argument(
+    "<todo to be deleted.>,argument contains the todo that has to be deleted."
+  )
+  .action((todo) => {
+    fs.readFile("todos.json", "utf-8", (err, data) => {
+      if (err) {
+        log(chalk.red("File doesnt exist."));
+      } else {
+        let dataObject = JSON.parse(data);
+        let found = 0;
+        for (let i = 0; i < dataObject.length; i++) {
+          if (dataObject[i]["todo"] == todo) {
+            dataObject.splice(i, 1);
+            fs.writeFile("todos.json", JSON.stringify(dataObject), () => {
+              log(chalk.green("Todo successfully deleted."));
+              log(dataObject);
+            });
+            found = 1;
+            break;
+          }
+        }
+        if (found == 0) {
+          log(chalk.red("Todo not found."));
+        }
+      }
+    });
+  });
 program.parse();
