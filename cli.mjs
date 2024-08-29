@@ -8,7 +8,7 @@ let log = console.log;
 program
   .name("Todo application")
   .description(
-    "Simple command line application that helps you add , delete todos and mark them as done/not done. Todos are stored in todos.json"
+    "Simple command line application that helps you add , delete todos and mark them as done/notDone. Todos are stored in todos.json"
   )
   .version("0.0.1");
 program
@@ -111,5 +111,53 @@ program
         }
       }
     });
-  }); //done
+  });
+program
+  .command("updateStatus")
+  .argument("<todo>,todo that has to be marked as done")
+  .argument("<status>,takes either 'done' or 'notDone' as input")
+  .action((todo, status) => {
+    if (status != "done" && status != "notDone") {
+      log(
+        chalk.red(`Invalid status recieved. ${status} is not a valid status.`)
+      );
+      return;
+    }
+    fs.readFile("todos.json", "utf-8", (err, data) => {
+      if (err) {
+        log(
+          chalk.red(
+            `Todos.json file doesnt exist , and hence the todo ${todo} is not found.`
+          )
+        );
+      } else {
+        let found = 0;
+        let dataObject = JSON.parse(data);
+        for (let i = 0; i < dataObject.length; i++) {
+          if (dataObject[i]["todo"] == todo) {
+            if (dataObject[i]["status"] == 0 && status == "done") {
+              dataObject[i]["status"] = 1;
+              // return;
+            } else if (dataObject[i]["status"] == 0 && status == "notDone") {
+              log(chalk.blue(`Todo named ${todo} has not been completed yet.`));
+              return;
+            } else if (dataObject[i]["status"] == 1 && status == "notDone") {
+              dataObject[i]["status"] = 0;
+              // return;
+            } else {
+              log(chalk.blue(`Todo ${todo} is already marked as done.`));
+              return;
+            }
+            found = 1;
+            fs.writeFile("todos.json", JSON.stringify(dataObject), () => {
+              log(chalk.green(`Status of todo - ${todo} has been updated.`));
+            });
+          }
+        }
+        if (found == 0) {
+          log(chalk.red(`Todo named ${todo} not found.`));
+        }
+      }
+    });
+  });
 program.parse();
